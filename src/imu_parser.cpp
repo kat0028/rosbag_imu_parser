@@ -58,9 +58,9 @@ int main()
             angular_velocity_x = msg->angular_velocity.x;
             angular_velocity_y = msg->angular_velocity.y;
             angular_velocity_z = msg->angular_velocity.z;
-            linear_acceleration_x = msg->angular_velocity.x;
-            linear_acceleration_y = msg->angular_velocity.y;
-            linear_acceleration_z = msg->angular_velocity.z;
+            linear_acceleration_x = msg->linear_acceleration.x;
+            linear_acceleration_y = msg->linear_acceleration.y;
+            linear_acceleration_z = msg->linear_acceleration.z;
 
             output_line = std::to_string(time) + ',' + std::to_string(angular_velocity_x) + ',' + std::to_string(angular_velocity_y) + ',' + std::to_string(angular_velocity_z) + ',' + std::to_string(linear_acceleration_x) + ',' + std::to_string(linear_acceleration_y) + ',' + std::to_string(linear_acceleration_z) + '\n';
             csv_file << output_line;
