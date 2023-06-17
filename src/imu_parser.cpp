@@ -46,7 +46,7 @@ int main()
 
     output_line = "time,gx,gy,gz,ax,ay,az\n";
     csv_file << output_line;
-    
+
     for(rosbag::MessageInstance const m: rosbag::View(bag))
     {
         msg  = m.instantiate<sensor_msgs::Imu>();
@@ -69,6 +69,5 @@ int main()
 
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "Run time: " << std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() << " seconds" << std::endl;
-    std::cout << output_line << std::endl;
     return 0;
 }
