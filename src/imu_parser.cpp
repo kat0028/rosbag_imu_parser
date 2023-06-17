@@ -1,9 +1,10 @@
 #include <iostream>
-#include "TinyMAT/tinymatwriter.h"
 #include <sensor_msgs/Imu.h>
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 #include <string>
+#include <cmath>
+#include <fstream>
 
 int main()
 {
@@ -12,10 +13,8 @@ int main()
     // Configuration Variables -------------------------------------------------------------------
     std::string path = "/home/kyle/Data/rosbag/";
     std::string bag_filename = path + "nick_hg1700ag75_syncIntern_2023-04-20-16-15-24.bag";
-    std::string mat_name = path + "data.mat";
+    std::string csv_filename = path + "data.csv";
     // -------------------------------------------------------------------------------------------
-
-    const char * mat_filename = mat_name.c_str();
 
     rosbag::Bag bag;
 
@@ -31,78 +30,45 @@ int main()
 
     sensor_msgs::Imu::ConstPtr msg;
 
-    std::vector<double> header_seq;
-    std::vector<double> header_stamp_sec;
-    std::vector<double> header_stamp_nsec;
-    std::vector<double> orientation_x;
-    std::vector<double> orientation_y;
-    std::vector<double> orientation_z;
-    std::vector<double> orientation_w;
-    std::vector<double> orientation_covariance;
-    std::vector<double> angular_velocity_x;
-    std::vector<double> angular_velocity_y;
-    std::vector<double> angular_velocity_z;
-    std::vector<double> angular_velocity_covariance;
-    std::vector<double> linear_acceleration_x;
-    std::vector<double> linear_acceleration_y;
-    std::vector<double> linear_acceleration_z;
-    std::vector<double> linear_acceleration_covariance;
+    int header_stamp_sec;
+    int header_stamp_nsec;
+    double time;
+    double angular_velocity_x;
+    double angular_velocity_y;
+    double angular_velocity_z;
+    double linear_acceleration_x;
+    double linear_acceleration_y;
+    double linear_acceleration_z;
 
+    std::ofstream csv_file;
+    csv_file.open(csv_filename, std::ofstream::out | std::ofstream::trunc);
+    std::string output_line;
 
+    output_line = "time,gx,gy,gz,ax,ay,az\n";
+    csv_file << output_line;
+    
     for(rosbag::MessageInstance const m: rosbag::View(bag))
     {
         msg  = m.instantiate<sensor_msgs::Imu>();
 
-        header_seq.push_back(msg->header.seq);
-        header_stamp_sec.push_back(msg->header.stamp.sec);
-        header_stamp_nsec.push_back(msg->header.stamp.nsec);
+        header_stamp_sec = msg->header.stamp.sec;
+        header_stamp_nsec = msg->header.stamp.nsec;
+        time = header_stamp_sec + header_stamp_nsec * pow(10, -9);
+        angular_velocity_x = msg->angular_velocity.x;
+        angular_velocity_y = msg->angular_velocity.y;
+        angular_velocity_z = msg->angular_velocity.z;
+        linear_acceleration_x = msg->angular_velocity.x;
+        linear_acceleration_y = msg->angular_velocity.y;
+        linear_acceleration_z = msg->angular_velocity.z;
 
-        orientation_x.push_back(msg->orientation.x);
-        orientation_y.push_back(msg->orientation.y);
-        orientation_z.push_back(msg->orientation.z);
-        orientation_w.push_back(msg->orientation.w);
-
-        angular_velocity_x.push_back(msg->angular_velocity.x);
-        angular_velocity_y.push_back(msg->angular_velocity.y);
-        angular_velocity_z.push_back(msg->angular_velocity.z);
-
-        linear_acceleration_x.push_back(msg->linear_acceleration.x);
-        linear_acceleration_y.push_back(msg->linear_acceleration.y);
-        linear_acceleration_z.push_back(msg->linear_acceleration.z);
-
-        for (int i = 0; i < orientation_covariance.size(); i++)
-        {
-            orientation_covariance.push_back(msg->orientation_covariance.at(i));
-            angular_velocity_covariance.push_back(msg->angular_velocity_covariance.at(i));
-            linear_acceleration_covariance.push_back(msg->angular_velocity_covariance.at(i));
-        }
+        output_line = std::to_string(time) + ',' + std::to_string(angular_velocity_x) + ',' + std::to_string(angular_velocity_y) + ',' + std::to_string(angular_velocity_z) + ',' + std::to_string(linear_acceleration_x) + ',' + std::to_string(linear_acceleration_y) + ',' + std::to_string(linear_acceleration_z) + '\n';
+        csv_file << output_line;        
     }
 
-    TinyMATWriterFile *mat_file = TinyMATWriter_open(mat_filename);
-    TinyMATWriter_startStruct(mat_file, "imu");
-
-    TinyMATWriter_writeDoubleVector(mat_file, "header_seq", header_seq, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "header_stamp_sec", header_stamp_sec, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "header_stamp_nsec", header_stamp_nsec, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "orientation_x", orientation_x, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "orientation_y", orientation_y, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "orientation_z", orientation_z, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "orientation_w", orientation_w, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "orientation_covariance", orientation_covariance, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "angular_velocity_x", angular_velocity_x, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "angular_velocity_y", angular_velocity_y, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "angular_velocity_z", angular_velocity_z, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "angular_velocity_covariance", angular_velocity_covariance, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "linear_acceleration_x", linear_acceleration_x, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "linear_acceleration_y", linear_acceleration_y, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "linear_acceleration_z", linear_acceleration_z, false);
-    TinyMATWriter_writeDoubleVector(mat_file, "linear_acceleration_covariance", linear_acceleration_covariance, false);
-
-    TinyMATWriter_endStruct(mat_file);
-    TinyMATWriter_close(mat_file);
+    csv_file.close();
 
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
     std::cout << "Run time: " << std::chrono::duration_cast<std::chrono::seconds>(end-begin).count() << " seconds" << std::endl;
-
+    std::cout << output_line << std::endl;
     return 0;
 }
